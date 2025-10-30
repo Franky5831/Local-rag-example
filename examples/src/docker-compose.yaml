@@ -1,11 +1,11 @@
 services:
 
   postgresql:
-    image: postgres:14-alpine
+    image: pgvector/pgvector:pg16
     ports:
       - 5432:5432
     volumes:
-      - ~/apps/postgres:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
     environment:
       - POSTGRES_PASSWORD=password
       - POSTGRES_USER=user
@@ -15,6 +15,8 @@ services:
       interval: 2s
       timeout: 5s
       retries: 5
+    logging:
+      driver: none
 
   ollama:
     image: ollama/ollama:latest
@@ -27,6 +29,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 3
+    logging:
+      driver: none
 
   ollama-setup:
     image: ollama/ollama:latest
@@ -44,6 +48,8 @@ services:
       ollama pull nomic-embed-text:latest &&
       echo 'Models downloaded successfully'
       "
+    logging:
+      driver: none
 
   app:
     build:
@@ -54,6 +60,9 @@ services:
         condition: service_healthy
       ollama-setup:
         condition: service_completed_successfully
+    logging:
+      driver: json-file
 
 volumes:
   ollama_data:
+  postgres_data:

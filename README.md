@@ -27,7 +27,7 @@ This is a perfect usecase for RAG, the data that is being fetched from search re
 
 
 ### Help
-If you happen to have any questions feel free to open a [GitHub issue](github.com/Franky5831/Local-rag-example/issues/new), I'd be happy to help.
+If you happen to have any questions feel free to open a [GitHub issue](https://github.com/Franky5831/Local-rag-example/issues/new), I'd be happy to help.
 
 
 <br>

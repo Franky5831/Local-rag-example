@@ -11,8 +11,8 @@ You can find Models [here](https://ollama.com/search); In this example I used re
 
 ## Run it
 ```bash
-docker-compose down
-docker-compose up --build
+docker-compose up --build -d
+docker-compose logs -f app
 ```
 <sup>It's going to take a while, it needs to download about .5GB of models from Ollama.</sup>
 

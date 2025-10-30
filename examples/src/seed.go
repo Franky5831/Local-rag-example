@@ -1,14 +1,165 @@
 package main
 
-import "fmt"
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"fmt"
+	"io"
+	"log"
+	"net/http"
+	"os"
+	"path/filepath"
+	"time"
 
-/*
- * 1. Install pg vector ext
- * 2. Create data table
- * 3. Seed data table with data dir
- * 4. return
- */
+	"github.com/jackc/pgx/v5/pgxpool"
+)
+
+const pgURI = "postgres://user:password@postgresql:5432/db?sslmode=disable&connect_timeout=5"
+const ollamaEmbedURL = "http://ollama:11434/api/embeddings"
+
+type EmbedRequest struct {
+	Model  string `json:"model"`
+	Prompt string `json:"prompt"`
+}
+
+type EmbedResponse struct {
+	Embedding []float64 `json:"embedding"`
+}
+
+func getEmbedding(content string) ([]float64, error) {
+	reqBody := EmbedRequest{
+		Model:  "nomic-embed-text:latest",
+		Prompt: content,
+	}
+
+	jsonData, err := json.Marshal(reqBody)
+	if err != nil {
+		return nil, fmt.Errorf("marshal failed: %w", err)
+	}
+
+	resp, err := http.Post(ollamaEmbedURL, "application/json", bytes.NewBuffer(jsonData))
+	if err != nil {
+		return nil, fmt.Errorf("request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("read failed: %w", err)
+	}
+
+	var embedResp EmbedResponse
+	if err := json.Unmarshal(body, &embedResp); err != nil {
+		return nil, fmt.Errorf("unmarshal failed: %w", err)
+	}
+
+	return embedResp.Embedding, nil
+}
+
+func createTable(ctx context.Context, pool *pgxpool.Pool) error {
+	query := `
+		CREATE TABLE IF NOT EXISTS documents (
+			id SERIAL PRIMARY KEY,
+			filename TEXT NOT NULL,
+			content TEXT NOT NULL,
+			embedding vector(768),
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		);
+		CREATE INDEX IF NOT EXISTS idx_embedding ON documents USING ivfflat (embedding vector_cosine_ops);
+	`
+	_, err := pool.Exec(ctx, query)
+	return err
+}
+
+func insertDocument(ctx context.Context, pool *pgxpool.Pool, filename, content string, embedding []float64) error {
+	// Convert embedding to pgvector format string
+	embedStr := "["
+	for i, val := range embedding {
+		if i > 0 {
+			embedStr += ","
+		}
+		embedStr += fmt.Sprintf("%f", val)
+	}
+	embedStr += "]"
+
+	query := `
+		INSERT INTO documents (filename, content, embedding)
+		VALUES ($1, $2, $3::vector)
+	`
+	_, err := pool.Exec(ctx, query, filename, content, embedStr)
+	return err
+}
 
 func Seed() {
-	fmt.Println("Seeding")
+	time.Sleep(2 * time.Second)
+
+	ctx := context.Background()
+
+	// Connect to PostgreSQL
+	cfg, err := pgxpool.ParseConfig(pgURI)
+	if err != nil {
+		log.Fatalf("bad DSN: %v", err)
+	}
+
+	pool, err := pgxpool.NewWithConfig(ctx, cfg)
+	if err != nil {
+		log.Fatalf("dial failed: %v", err)
+	}
+	defer pool.Close()
+
+	if err := pool.Ping(ctx); err != nil {
+		log.Fatalf("ping failed: %v", err)
+	}
+
+	// Enable pgvector extension
+	if _, err := pool.Exec(ctx, "CREATE EXTENSION IF NOT EXISTS vector"); err != nil {
+		log.Fatalf("failed to enable vector extension: %v", err)
+	}
+
+	// Create table
+	if err := createTable(ctx, pool); err != nil {
+		log.Fatalf("failed to create table: %v", err)
+	}
+	fmt.Println("Table ready")
+
+	// Read all .md files from data directory
+	files, err := filepath.Glob("data/*.md")
+	if err != nil {
+		log.Fatalf("failed to read data directory: %v", err)
+	}
+
+	if len(files) == 0 {
+		fmt.Println("No .md files found in data directory")
+		return
+	}
+
+	// Process each file
+	for _, file := range files {
+		filename := filepath.Base(file)
+		fmt.Printf("Processing %s...", filename)
+
+		content, err := os.ReadFile(file)
+		if err != nil {
+			log.Printf("failed to read %s: %v", filename, err)
+			continue
+		}
+
+		// Get embedding
+		embedding, err := getEmbedding(string(content))
+		if err != nil {
+			log.Printf("failed to get embedding for %s: %v", filename, err)
+			continue
+		}
+
+		// Insert into database
+		if err := insertDocument(ctx, pool, filename, string(content), embedding); err != nil {
+			log.Printf("failed to insert %s: %v", filename, err)
+			continue
+		}
+
+		fmt.Println(" ✓")
+	}
+
+	fmt.Println("Seeding complete!")
 }
