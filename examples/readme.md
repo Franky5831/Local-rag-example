@@ -11,9 +11,11 @@ You can find Models [here](https://ollama.com/search); In this example I used re
 
 ## Run it
 ```bash
-docker build -t my-rag-example .
-docker run -it --rm --name my-running-rag-app my-rag-example
+docker-compose down
+docker-compose up --build
 ```
+<sup>It's going to take a while, it needs to download about .5GB of models from Ollama.</sup>
+
 1. [main.go](./src/main.go) is called as the app entrypoint.
 2. [seed.go](./src/seed.go) is called from main: it takes all the data from the data directory.
 3. [retrive.go](./src/retrive.go) is calle from main: it asks some questions regarding the data that has just been seeded.
