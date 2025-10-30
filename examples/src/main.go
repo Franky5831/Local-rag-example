@@ -9,7 +9,7 @@ func main() {
 	fmt.Println("Seeding data:")
 	Seed()
 
-	// fmt.Println("\n\n====================")
-	// fmt.Println("Retriving data:")
-	// Retrive()
+	fmt.Println("\n\n====================")
+	fmt.Println("Retriving data:")
+	Retrive()
 }

@@ -1,61 +1,15 @@
 package main
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
 	"log"
-	"net/http"
 	"os"
 	"path/filepath"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
-
-const pgURI = "postgres://user:password@postgresql:5432/db?sslmode=disable&connect_timeout=5"
-const ollamaEmbedURL = "http://ollama:11434/api/embeddings"
-
-type EmbedRequest struct {
-	Model  string `json:"model"`
-	Prompt string `json:"prompt"`
-}
-
-type EmbedResponse struct {
-	Embedding []float64 `json:"embedding"`
-}
-
-func getEmbedding(content string) ([]float64, error) {
-	reqBody := EmbedRequest{
-		Model:  "nomic-embed-text:latest",
-		Prompt: content,
-	}
-
-	jsonData, err := json.Marshal(reqBody)
-	if err != nil {
-		return nil, fmt.Errorf("marshal failed: %w", err)
-	}
-
-	resp, err := http.Post(ollamaEmbedURL, "application/json", bytes.NewBuffer(jsonData))
-	if err != nil {
-		return nil, fmt.Errorf("request failed: %w", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("read failed: %w", err)
-	}
-
-	var embedResp EmbedResponse
-	if err := json.Unmarshal(body, &embedResp); err != nil {
-		return nil, fmt.Errorf("unmarshal failed: %w", err)
-	}
-
-	return embedResp.Embedding, nil
-}
 
 func createTable(ctx context.Context, pool *pgxpool.Pool) error {
 	query := `
