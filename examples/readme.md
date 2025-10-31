@@ -18,7 +18,7 @@ docker-compose logs -f app
 
 1. [main.go](./src/main.go) is called as the app entrypoint.
 2. [seed.go](./src/seed.go) is called from main: it takes all the data from the data directory.
-3. [retrive.go](./src/retrive.go) is calle from main: it asks some questions regarding the data that has just been seeded.
+3. [Retrive.go](./src/Retrive.go) is calle from main: it asks some questions regarding the data that has just been seeded.
 
 ### Expected output
 ```
