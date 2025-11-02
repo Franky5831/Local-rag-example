@@ -11,6 +11,7 @@ You can find Models [here](https://ollama.com/search); In this example I used re
 
 ## Run it
 ```bash
+cd src
 docker-compose up --build -d
 docker-compose logs -f app
 ```

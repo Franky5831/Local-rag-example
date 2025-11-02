@@ -26,6 +26,12 @@ func createTable(ctx context.Context, pool *pgxpool.Pool) error {
 	return err
 }
 
+func emptyTable(ctx context.Context, pool *pgxpool.Pool) error {
+	query := "DELETE FROM documents"
+	_, err := pool.Exec(ctx, query)
+	return err
+}
+
 func insertDocument(ctx context.Context, pool *pgxpool.Pool, filename, content string, embedding []float64) error {
 	// Convert embedding to pgvector format string
 	embedStr := "["
@@ -70,6 +76,14 @@ func Seed() {
 	if _, err := pool.Exec(ctx, "CREATE EXTENSION IF NOT EXISTS vector"); err != nil {
 		log.Fatalf("failed to enable vector extension: %v", err)
 	}
+
+	// Empty table
+	// We need to empty the table, if you run this example more than once you'll be left with multiple copies of the same document
+	// This project is just an example, you probably want to create some sort of logic to either update records or not import existing ones
+	if err := emptyTable(ctx, pool); err != nil {
+		log.Fatalf("failed to empty table: %v", err)
+	}
+	fmt.Println("Table ready")
 
 	// Create table
 	if err := createTable(ctx, pool); err != nil {

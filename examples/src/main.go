@@ -10,6 +10,6 @@ func main() {
 	Seed()
 
 	fmt.Println("\n\n====================")
-	fmt.Println("Retriving data:")
+	fmt.Println("Asking questions:")
 	Retrive()
 }

@@ -14,7 +14,7 @@ import (
 )
 
 var questions = []string{
-	"what do I have in the fridge?",
+	"what's in the fridge?",
 	"when did gundam first came out?",
 }
 
@@ -57,7 +57,7 @@ func searchRelevantDocs(ctx context.Context, pool *pgxpool.Pool, question string
 	embedStr += "]"
 
 	// Search for similar documents
-	// Gets only documents that are at least 0.7 relevant. It goes from 0 to 1
+	// Gets only documents that are at least 0.5 relevant. It goes from 0 to 1, the lower the value the more relevant the documents have to be
 	// Gets only top 3 results
 	query := `
 		SELECT filename, content
@@ -189,6 +189,5 @@ func Retrive() {
 		log.Fatalf("ping failed: %v", err)
 	}
 	// Ask questions
-	fmt.Println("\nAsking questions...")
 	askQuestions(ctx, pool)
 }
