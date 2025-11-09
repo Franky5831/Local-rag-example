@@ -23,10 +23,20 @@ docker-compose logs -f app
 
 ### Expected output
 ```
+====================
+Seeding data:
+Processing [file].md... ✓
+...
+
+====================
+Asking questions:
+
 Question: what do I have in the fridge?
 Answer: you have tomatoes, milk and eggs
 
 Question: when did gundam first came out?
 Answer: The first Mobile Suit Gundam series aired in Japan on April 7, 1979.
 ```
-The data used to provide those answers can be found in the [data](./src/data/) files.
+<video src="./../assets/local-rag-example--example-script-usage-terminal.mov" width="830" height="526" controls></video>
+
+The data used to provide those answers can be found in the [data](./src/data/) files, only two files have informations that are relevant to the questions asked, the others are just ***noise*** used to show how vector search filters them out.
