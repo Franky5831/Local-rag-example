@@ -37,6 +37,6 @@ Answer: you have tomatoes, milk and eggs
 Question: when did gundam first came out?
 Answer: The first Mobile Suit Gundam series aired in Japan on April 7, 1979.
 ```
-<video src="./../assets/local-rag-example--example-script-usage-terminal.mp4" width="830" controls></video>
+<video src="https://github.com/user-attachments/assets/a8579fa9-e726-4093-875a-d70208cb0d99" width="830" controls></video>
 
 The data used to provide those answers can be found in the [data](./src/data/) files, only two files have informations that are relevant to the questions asked, the others are just ***noise*** used to show how vector search filters them out.
